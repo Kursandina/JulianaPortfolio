@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #090a0f;
+    --bg-surface: #12141c;
+    --bg-surface-elevated: #1a1d28;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.2);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #8b5cf6;
+    --accent-glow: rgba(139, 92, 246, 0.25);
+    --accent-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    --card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    --display-font: 'Syne', -apple-system, sans-serif;
+  }
+
+  [data-theme="champagne"] {
+    --bg-main: #f5f2eb;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ede8dc;
+    --border-color: rgba(60, 64, 52, 0.12);
+    --border-hover: rgba(60, 64, 52, 0.35);
+    --text-primary: #1c221a;
+    --text-secondary: #4a5445;
+    --text-muted: #748070;
+    --accent: #47543f;
+    --accent-glow: rgba(71, 84, 63, 0.2);
+    --accent-gradient: linear-gradient(135deg, #47543f 0%, #697860 100%);
+    --card-gradient: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+    --display-font: 'Playfair Display', Georgia, serif;
+  }
+
+  [data-theme="crimson"] {
+    --bg-main: #ebe7e0;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #dfdbd2;
+    --border-color: rgba(17, 17, 17, 0.15);
+    --border-hover: rgba(225, 29, 72, 0.6);
+    --text-primary: #0f0f11;
+    --text-secondary: #3b3b42;
+    --text-muted: #6b6b77;
+    --accent: #e11d48;
+    --accent-glow: rgba(225, 29, 72, 0.25);
+    --accent-gradient: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+    --card-gradient: linear-gradient(180deg, #ffffff 0%, #f6f3ee 100%);
+    --display-font: 'Bebas Neue', sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-main);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-hover);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+}
+
+.font-display {
+  font-family: var(--display-font);
+}
+
+.font-condensed {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.font-serif-luxury {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-card {
+  background: var(--card-gradient);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px var(--accent-glow);
+}
+
+/* Subtle background noise texture */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Ambient glowing orbs */
+.ambient-glow-purple {
+  background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0) 70%);
+}
+
+.ambient-glow-rose {
+  background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.14) 0%, rgba(244, 63, 94, 0) 70%);
+}
+
+.ambient-glow-gold {
+  background: radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.15) 0%, rgba(217, 119, 6, 0) 70%);
+}
+
+/* 3D tilt effect helper */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+/* Text Shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
