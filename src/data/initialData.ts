@@ -375,5 +375,20 @@ export const INITIAL_PORTFOLIO_DATA: PortfolioData = {
     adminPin: "juliana2025",
     siteTitle: "Juliana Rincón — Mercadeo & Publicidad Estratégica",
     presentationMode: "cv"
-  }
+  },
+  messages: [
+    {
+      id: "msg-welcome",
+      name: "Equipo de Reclutamiento / Talento Remoto",
+      email: "recruiting@globaltech.co",
+      company: "Global Tech Ventures",
+      rolePosition: "Marketing Lead / Growth Strategist",
+      contractType: "Remoto Tiempo Completo (Full-Time)",
+      budget: "$3,000 - $5,000 USD",
+      message: "¡Hola Juliana! Vimos tu portafolio y nos encantó tu trayectoria liderando pauta y branding. Quisiéramos coordinar una videollamada para conocerte y contarte sobre nuestra vacante de Marketing Lead.",
+      date: new Date().toISOString(),
+      read: false,
+      source: "cta"
+    }
+  ]
 }

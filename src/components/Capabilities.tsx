@@ -50,48 +50,65 @@ export const Capabilities: React.FC = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, idx) => (
-            <div
-              key={service.id}
-              className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--border-hover)] transition-all duration-300 group hover:-translate-y-1.5 hover:shadow-xl hover:shadow-[var(--accent-glow)] flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {getIcon(service.icon)}
+          {(services || [])
+            .filter((service) => service && service.title?.trim().length > 0)
+            .map((service, idx) => {
+              const validDeliverables = (service.deliverables || []).filter(
+                (d) => d && d.trim().length > 0
+              )
+
+              return (
+                <div
+                  key={service.id}
+                  className="p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--border-hover)] transition-all duration-300 group hover:-translate-y-1.5 hover:shadow-xl hover:shadow-[var(--accent-glow)] flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-center group-hover:scale-110 transition-transform">
+                        {getIcon(service.icon)}
+                      </div>
+                      <span className="font-mono text-xs font-bold text-[var(--text-muted)]">
+                        0{idx + 1}
+                      </span>
+                    </div>
+
+                    <h3 className="font-display font-bold text-2xl text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2">
+                      {service.title.trim()}
+                    </h3>
+                    {service.subtitle && service.subtitle.trim() && (
+                      <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-4">
+                        {service.subtitle.trim()}
+                      </p>
+                    )}
+
+                    {service.description && service.description.trim() && (
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                        {service.description.trim()}
+                      </p>
+                    )}
                   </div>
-                  <span className="font-mono text-xs font-bold text-[var(--text-muted)]">
-                    0{idx + 1}
-                  </span>
+
+                  {validDeliverables.length > 0 && (
+                    <div className="pt-6 border-t border-[var(--border-color)]">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-3">
+                        {isCvMode ? 'Capacidades Concretas:' : 'Entregables Clave:'}
+                      </span>
+                      <ul className="space-y-2">
+                        {validDeliverables.map((deliv, dIdx) => (
+                          <li
+                            key={dIdx}
+                            className="flex items-start gap-2 text-xs text-[var(--text-secondary)]"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                            <span>{deliv.trim()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-
-                <h3 className="font-display font-bold text-2xl text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-xs font-semibold text-[var(--accent)] uppercase tracking-wider mb-4">
-                  {service.subtitle}
-                </p>
-
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
-                  {service.description}
-                </p>
-              </div>
-
-              <div className="pt-6 border-t border-[var(--border-color)]">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-3">
-                  {isCvMode ? 'Capacidades Concretas:' : 'Entregables Clave:'}
-                </span>
-                <ul className="space-y-2">
-                  {service.deliverables.map((deliv, dIdx) => (
-                    <li key={dIdx} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{deliv}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+              )
+            })}
         </div>
       </div>
     </section>

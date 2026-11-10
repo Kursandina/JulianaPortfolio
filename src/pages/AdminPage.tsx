@@ -7,7 +7,8 @@ import {
   Download, Upload, RotateCcw, Check, ArrowLeft, LayoutDashboard,
   Palette, ShieldCheck, Eye, LogOut, Flame, Target, MessageSquareHeart,
   Workflow, BarChart3, Megaphone, Compass, FileText, Globe, Building2,
-  Calendar, MapPin, Database, Cloud, RefreshCw, AlertCircle, CheckCircle2
+  Calendar, MapPin, Database, Cloud, RefreshCw, AlertCircle, CheckCircle2,
+  Mail, MessageCircle, Inbox
 } from 'lucide-react'
 import {
   ProjectItem,
@@ -55,7 +56,9 @@ export const AdminPage: React.FC = () => {
     setIsCvModalOpen,
     firebaseStatus,
     syncCurrentDataToCloud,
-    pullDataFromCloud
+    pullDataFromCloud,
+    markMessageRead,
+    deleteMessage
   } = usePortfolio()
 
   const navigate = useNavigate()
@@ -67,8 +70,9 @@ export const AdminPage: React.FC = () => {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'experience' | 'projects' | 'services' | 'tools' | 'education' | 'profile' | 'metrics' | 'process' | 'testimonials' | 'settings'
+    'dashboard' | 'inbox' | 'experience' | 'projects' | 'services' | 'tools' | 'education' | 'profile' | 'metrics' | 'process' | 'testimonials' | 'settings'
   >('dashboard')
+  const [messageFilter, setMessageFilter] = useState<'all' | 'unread' | 'read'>('all')
 
   // Feedback toast
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -234,9 +238,17 @@ export const AdminPage: React.FC = () => {
     )
   }
 
+  const unreadMessagesCount = (data.messages || []).filter((m) => !m.read).length
+
   // ─── AUTHENTICATED CMS DASHBOARD ─────────────────────────────
   const sidebarTabs = [
     { id: 'dashboard', label: 'Dashboard & Modo', icon: <LayoutDashboard className="w-4 h-4" /> },
+    {
+      id: 'inbox',
+      label: 'Bandeja de Entrevistas',
+      icon: <Mail className="w-4 h-4" />,
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined
+    },
     { id: 'experience', label: 'Experiencia Laboral', icon: <Building2 className="w-4 h-4" /> },
     { id: 'projects', label: 'Campañas & Trabajos', icon: <Briefcase className="w-4 h-4" /> },
     { id: 'services', label: 'Competencias / Servicios', icon: <Sparkles className="w-4 h-4" /> },
@@ -322,14 +334,27 @@ export const AdminPage: React.FC = () => {
                 setActiveTab(tab.id as any)
                 resetAllSubForms()
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all ${
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === tab.id
                   ? 'bg-[var(--accent)] text-white shadow-md shadow-black/20'
                   : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)]'
               }`}
             >
-              {tab.icon}
-              <span>{tab.label}</span>
+              <div className="flex items-center gap-3">
+                {tab.icon}
+                <span>{tab.label}</span>
+              </div>
+              {tab.badge && (
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    activeTab === tab.id
+                      ? 'bg-white text-purple-700'
+                      : 'bg-amber-400 text-black'
+                  }`}
+                >
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -389,6 +414,9 @@ export const AdminPage: React.FC = () => {
           >
             {tab.icon}
             <span>{tab.label}</span>
+            {tab.badge && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse ml-0.5" />
+            )}
           </button>
         ))}
       </div>
@@ -491,19 +519,49 @@ export const AdminPage: React.FC = () => {
               {/* Quick Stats Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Historial Laboral', value: data.experience?.length || 0, color: 'text-emerald-400', tab: 'experience' },
-                  { label: 'Campañas / Casos', value: data.projects.length, color: 'text-purple-400', tab: 'projects' },
-                  { label: 'Competencias / Servicios', value: data.services.length, color: 'text-rose-400', tab: 'services' },
-                  { label: 'Herramientas Stack', value: data.tools.length, color: 'text-sky-400', tab: 'tools' }
+                  {
+                    label: 'Entrevistas & Leads',
+                    value: data.messages?.length || 0,
+                    badge: unreadMessagesCount > 0 ? `${unreadMessagesCount} nuevos` : undefined,
+                    color: 'text-amber-400',
+                    tab: 'inbox',
+                    sub: unreadMessagesCount > 0 ? `${unreadMessagesCount} sin leer →` : 'Ver bandeja →'
+                  },
+                  {
+                    label: 'Historial Laboral',
+                    value: data.experience?.length || 0,
+                    color: 'text-emerald-400',
+                    tab: 'experience',
+                    sub: 'Gestionar CRUD →'
+                  },
+                  {
+                    label: 'Campañas / Casos',
+                    value: data.projects.length,
+                    color: 'text-purple-400',
+                    tab: 'projects',
+                    sub: 'Gestionar CRUD →'
+                  },
+                  {
+                    label: 'Competencias Stack',
+                    value: data.services.length + data.tools.length,
+                    color: 'text-rose-400',
+                    tab: 'services',
+                    sub: 'Gestionar CRUD →'
+                  }
                 ].map((stat) => (
                   <div
                     key={stat.label}
                     onClick={() => { setActiveTab(stat.tab as any); resetAllSubForms() }}
-                    className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--accent)] cursor-pointer transition-all hover:-translate-y-1"
+                    className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--accent)] cursor-pointer transition-all hover:-translate-y-1 relative"
                   >
+                    {stat.badge && (
+                      <span className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400 text-black animate-pulse">
+                        {stat.badge}
+                      </span>
+                    )}
                     <span className="text-xs font-mono uppercase text-[var(--text-muted)] block mb-1">{stat.label}</span>
                     <span className={`font-display font-extrabold text-3xl ${stat.color}`}>{stat.value}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">Gestionar CRUD →</span>
+                    <span className="text-[10px] text-[var(--text-muted)] block mt-1">{stat.sub}</span>
                   </div>
                 ))}
               </div>
@@ -595,6 +653,223 @@ export const AdminPage: React.FC = () => {
                   <span>Abrir Portafolio</span>
                 </a>
               </div>
+            </div>
+          )}
+
+          {/* ═══ INBOX TAB (ENTREVISTAS & SOLICITUDES DE CONTACTO) ═══ */}
+          {activeTab === 'inbox' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-display font-bold text-2xl sm:text-3xl flex items-center gap-2.5">
+                    <span>Bandeja de Entrevistas &amp; Contacto</span>
+                    {unreadMessagesCount > 0 && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        {unreadMessagesCount} nueva{unreadMessagesCount > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    Aquí llegan las solicitudes de empresas y reclutadores que completan el formulario &quot;Conectemos para una entrevista&quot; o el botón de contacto en tu portafolio.
+                  </p>
+                </div>
+
+                {/* Filter buttons */}
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-xs font-semibold self-start sm:self-auto">
+                  <button
+                    onClick={() => setMessageFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      messageFilter === 'all'
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    Todos ({(data.messages || []).length})
+                  </button>
+                  <button
+                    onClick={() => setMessageFilter('unread')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      messageFilter === 'unread'
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    No leídos ({unreadMessagesCount})
+                  </button>
+                  <button
+                    onClick={() => setMessageFilter('read')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      messageFilter === 'read'
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    Leídos ({(data.messages || []).filter((m) => m.read).length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages List */}
+              {!data.messages || data.messages.length === 0 ? (
+                <div className="p-12 rounded-3xl border border-dashed border-[var(--border-color)] bg-[var(--bg-surface)] text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-4 text-[var(--text-muted)]">
+                    <Inbox className="w-8 h-8" />
+                  </div>
+                  <h4 className="font-bold text-base text-[var(--text-primary)] mb-1">
+                    No hay solicitudes de entrevista por ahora
+                  </h4>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto">
+                    Cuando una empresa o reclutador complete el formulario de &quot;Agendar Entrevista&quot; o &quot;Hablemos&quot; en tu sitio web, sus datos y mensaje aparecerán aquí inmediatamente.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(data.messages || [])
+                    .filter((m) => {
+                      if (messageFilter === 'unread') return !m.read
+                      if (messageFilter === 'read') return m.read
+                      return true
+                    })
+                    .map((msg) => {
+                      const dateObj = new Date(msg.date)
+                      const formattedDate = !isNaN(dateObj.getTime())
+                        ? dateObj.toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : msg.date
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-6 sm:p-7 rounded-3xl border transition-all duration-300 ${
+                            !msg.read
+                              ? 'border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20'
+                              : 'border-[var(--border-color)] bg-[var(--bg-surface)]'
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                {!msg.read ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                    Nuevo
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium text-[var(--text-muted)] bg-[var(--bg-surface-elevated)] border border-[var(--border-color)]">
+                                    Leído
+                                  </span>
+                                )}
+
+                                {msg.rolePosition && (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30">
+                                    {msg.rolePosition}
+                                  </span>
+                                )}
+
+                                {msg.contractType && (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                    {msg.contractType}
+                                  </span>
+                                )}
+
+                                <span className="text-[11px] text-[var(--text-muted)] font-mono ml-auto sm:ml-0">
+                                  {formattedDate}
+                                </span>
+                              </div>
+
+                              <h3 className="font-display font-bold text-xl text-[var(--text-primary)]">
+                                {msg.name}
+                              </h3>
+
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)] mt-1">
+                                {msg.company && (
+                                  <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+                                    <Building2 className="w-3.5 h-3.5 text-[var(--accent)]" />
+                                    <span>{msg.company}</span>
+                                  </span>
+                                )}
+
+                                <a
+                                  href={`mailto:${msg.email}?subject=Respuesta a solicitud de entrevista - Juliana Rincón`}
+                                  className="flex items-center gap-1 text-[var(--accent)] hover:underline font-mono"
+                                >
+                                  <Mail className="w-3.5 h-3.5" />
+                                  <span>{msg.email}</span>
+                                </a>
+
+                                {msg.budget && (
+                                  <span className="font-mono text-emerald-400">
+                                    Presupuesto: {msg.budget}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Top Right Quick Actions */}
+                            <div className="flex items-center gap-2 self-end sm:self-start">
+                              <button
+                                onClick={() => markMessageRead(msg.id, !msg.read)}
+                                className="px-3 py-1.5 rounded-xl border border-[var(--border-color)] hover:border-[var(--accent)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                              >
+                                {msg.read ? 'Marcar no leído' : 'Marcar leído'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm('¿Deseas eliminar este mensaje de la bandeja?')) {
+                                    deleteMessage(msg.id)
+                                    showToast('Mensaje eliminado')
+                                  }
+                                }}
+                                className="p-2 rounded-xl border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                title="Eliminar mensaje"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Message Body */}
+                          <div className="p-4 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap mb-4">
+                            {msg.message}
+                          </div>
+
+                          {/* Action strip: Reply email / Reply WhatsApp */}
+                          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[var(--border-color)]">
+                            <a
+                              href={`mailto:${msg.email}?subject=Entrevista laboral - Juliana Rincón&body=Hola ${encodeURIComponent(
+                                msg.name
+                              )},%0D%0A%0D%0AGracias por ponerte en contacto. Con mucho gusto podemos agendar una videollamada para conversar sobre la oportunidad.%0D%0A%0D%0ASaludos cordiales,%0D%0AJuliana Rincón`}
+                              className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:opacity-90 shadow-md transition-all"
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                              <span>Responder por Correo</span>
+                            </a>
+
+                            <a
+                              href={`https://wa.me/${data.profile.whatsapp.replace(
+                                /[^0-9]/g,
+                                ''
+                              )}?text=Hola%20${encodeURIComponent(
+                                msg.name
+                              )},%20te%20escribo%20en%20respuesta%20a%20tu%20mensaje%20en%20mi%20portafolio`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>Escribir por WhatsApp</span>
+                            </a>
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
+              )}
             </div>
           )}
 
@@ -812,6 +1087,8 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          
 
           {/* ═══ PROJECTS TAB (CRUD) ═══ */}
           {activeTab === 'projects' && (
@@ -1317,6 +1594,8 @@ export const AdminPage: React.FC = () => {
             </div>
           )}
 
+          
+
           {/* ═══ EDUCATION TAB (CRUD) ═══ */}
           {activeTab === 'education' && (
             <div>
@@ -1473,6 +1752,8 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          
 
           {/* ═══ PROFILE & CV TAB ═══ */}
           {activeTab === 'profile' && (
@@ -1681,6 +1962,8 @@ export const AdminPage: React.FC = () => {
             </div>
           )}
 
+          
+
           {/* ═══ METRICS TAB ═══ */}
           {activeTab === 'metrics' && (
             <div className="space-y-6">
@@ -1721,6 +2004,8 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          
 
           {/* ═══ PROCESS TAB (CRUD) ═══ */}
           {activeTab === 'process' && (
@@ -1818,6 +2103,8 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          
 
           {/* ═══ TESTIMONIALS TAB (CRUD) ═══ */}
           {activeTab === 'testimonials' && (
@@ -1991,6 +2278,8 @@ export const AdminPage: React.FC = () => {
             </div>
           )}
 
+          
+
           {/* ═══ SETTINGS & THEME TAB ═══ */}
           {activeTab === 'settings' && (
             <div className="space-y-8">
@@ -2126,6 +2415,8 @@ export const AdminPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          
 
         </div>
       </main>

@@ -117,6 +117,20 @@ export interface SiteSettings {
   presentationMode: PresentationMode // 'cv' | 'freelance'
 }
 
+export interface InterviewRequest {
+  id: string
+  name: string
+  email: string
+  company?: string
+  rolePosition?: string
+  contractType?: string
+  budget?: string
+  message: string
+  date: string
+  read: boolean
+  source?: 'cta' | 'modal'
+}
+
 export interface PortfolioData {
   profile: ProfileData
   metrics: MetricItem[]
@@ -128,6 +142,7 @@ export interface PortfolioData {
   process: ProcessItem[]
   testimonials: TestimonialItem[]
   settings: SiteSettings
+  messages?: InterviewRequest[]
 }
 
 export interface FirebaseConfig {

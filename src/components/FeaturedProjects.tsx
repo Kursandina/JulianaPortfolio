@@ -10,9 +10,13 @@ export const FeaturedProjects: React.FC = () => {
 
   const categories = ['Todos', 'Campaña 360', 'Performance & Ads', 'Branding', 'Social Media', 'Growth', 'E-commerce']
 
+  const validProjects = (projects || []).filter(
+    (p) => p && (p.title?.trim() || p.client?.trim())
+  )
+
   const filteredProjects = activeCategory === 'Todos'
-    ? projects
-    : projects.filter(p => p.category === activeCategory)
+    ? validProjects
+    : validProjects.filter(p => p.category === activeCategory)
 
   return (
     <section id="trabajos" className="py-24 md:py-32 relative">

@@ -4,13 +4,14 @@ import { X, Send, Mail, MessageCircle, Check } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 export const ContactModal: React.FC = () => {
-  const { isContactModalOpen, setIsContactModalOpen, data } = usePortfolio()
-  const { profile } = data
+  const { isContactModalOpen, setIsContactModalOpen, data, addInterviewRequest } = usePortfolio()
+  const { profile, settings } = data
+  const isCvMode = settings.presentationMode === 'cv'
 
   const [form, setForm] = useState({
     name: '',
     email: '',
-    service: 'Campaña 360 & Pauta',
+    service: isCvMode ? 'Entrevista de Trabajo Remoto' : 'Campaña 360 & Pauta',
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
@@ -18,10 +19,21 @@ export const ContactModal: React.FC = () => {
   if (!isContactModalOpen) return null
 
   const cleanPhone = profile.whatsapp.replace(/[^0-9]/g, '')
-  const whatsappUrl = `https://wa.me/${cleanPhone}?text=Hola%20Juliana,%20quiero%20cotizar%20un%20proyecto%20de%20mercadeo`
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=Hola%20Juliana,%20vi%20tu%20perfil%20profesional%20y%20me%20gustar%C3%ADa%20conversar`
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.name.trim() || !form.email.trim()) return
+
+    addInterviewRequest({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      rolePosition: form.service,
+      contractType: isCvMode ? 'Remoto Full-Time / Entrevista' : 'Proyecto',
+      message: form.message.trim(),
+      source: 'modal'
+    })
+
     setSubmitted(true)
     try {
       confetti({ particleCount: 70, spread: 50, origin: { y: 0.6 } })

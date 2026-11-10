@@ -6,6 +6,11 @@ export const ToolsAndEducation: React.FC = () => {
   const { data } = usePortfolio()
   const { tools, education } = data
 
+  const validTools = (tools || []).filter((t) => t && t.name?.trim().length > 0)
+  const validEducation = (education || []).filter(
+    (e) => e && (e.degree?.trim().length > 0 || e.institution?.trim().length > 0)
+  )
+
   return (
     <section id="experiencia" className="py-24 md:py-32 relative">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
@@ -27,22 +32,24 @@ export const ToolsAndEducation: React.FC = () => {
 
               {/* Tools Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                {tools.map((tool) => (
+                {validTools.map((tool) => (
                   <div
                     key={tool.id}
                     className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--accent)] transition-all duration-200 group flex flex-col justify-between"
                   >
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono block mb-1">
-                        {tool.category}
-                      </span>
+                      {tool.category && tool.category.trim() && (
+                        <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono block mb-1">
+                          {tool.category.trim()}
+                        </span>
+                      )}
                       <h4 className="font-bold text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                        {tool.name}
+                        {tool.name.trim()}
                       </h4>
                     </div>
-                    {tool.badge && (
+                    {tool.badge && tool.badge.trim() && (
                       <span className="mt-3 inline-block self-start text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] text-[var(--text-secondary)] font-medium">
-                        {tool.badge}
+                        {tool.badge.trim()}
                       </span>
                     )}
                   </div>
@@ -67,7 +74,7 @@ export const ToolsAndEducation: React.FC = () => {
 
               {/* Education Timeline Cards */}
               <div className="space-y-4">
-                {education.map((item) => (
+                {validEducation.map((item) => (
                   <div
                     key={item.id}
                     className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--border-hover)] transition-all flex items-start gap-4 group"
@@ -84,20 +91,24 @@ export const ToolsAndEducation: React.FC = () => {
                         <span className="text-[11px] font-mono text-[var(--accent)] font-semibold uppercase">
                           {item.type}
                         </span>
-                        <span className="text-xs text-[var(--text-muted)] font-mono">
-                          {item.period}
-                        </span>
+                        {item.period && item.period.trim() && (
+                          <span className="text-xs text-[var(--text-muted)] font-mono">
+                            {item.period.trim()}
+                          </span>
+                        )}
                       </div>
                       <h4 className="font-display font-bold text-base text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors mb-0.5">
-                        {item.degree}
+                        {item.degree.trim()}
                       </h4>
-                      <p className="text-xs text-[var(--text-secondary)] mb-2">
-                        {item.institution}
-                      </p>
-                      {item.credentialId && (
+                      {item.institution && item.institution.trim() && (
+                        <p className="text-xs text-[var(--text-secondary)] mb-2">
+                          {item.institution.trim()}
+                        </p>
+                      )}
+                      {item.credentialId && item.credentialId.trim() && (
                         <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-mono">
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>{item.credentialId}</span>
+                          <span>{item.credentialId.trim()}</span>
                         </div>
                       )}
                     </div>

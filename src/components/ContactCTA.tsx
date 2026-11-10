@@ -4,7 +4,7 @@ import { Mail, MapPin, Send, MessageCircle, ArrowUpRight, Check, Sparkles, FileT
 import confetti from 'canvas-confetti'
 
 export const ContactCTA: React.FC = () => {
-  const { data } = usePortfolio()
+  const { data, addInterviewRequest } = usePortfolio()
   const { profile, settings } = data
   const isCvMode = settings.presentationMode === 'cv'
 
@@ -27,6 +27,18 @@ export const ContactCTA: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formState.name.trim() || !formState.email.trim()) return
+
+    addInterviewRequest({
+      name: formState.name.trim(),
+      email: formState.email.trim(),
+      rolePosition: isCvMode ? formState.rolePosition : 'Proyecto Freelance / Consultoría',
+      contractType: isCvMode ? formState.contractType : 'Por Proyecto',
+      budget: formState.budget,
+      message: formState.message.trim(),
+      source: 'cta'
+    })
+
     setSubmitted(true)
     try {
       confetti({

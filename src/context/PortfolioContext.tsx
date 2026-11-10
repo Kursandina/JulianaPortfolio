@@ -13,7 +13,8 @@ import {
   MetricItem,
   ProcessItem,
   FirebaseConfig,
-  FirebaseSyncStatus
+  FirebaseSyncStatus,
+  InterviewRequest
 } from '../types/portfolio'
 import { INITIAL_PORTFOLIO_DATA } from '../data/initialData'
 import {
@@ -62,6 +63,10 @@ interface PortfolioContextType {
   setIsContactModalOpen: (open: boolean) => void
   isCvModalOpen: boolean
   setIsCvModalOpen: (open: boolean) => void
+  // Interview requests & Contact messages
+  addInterviewRequest: (req: Omit<InterviewRequest, 'id' | 'date' | 'read'>) => void
+  markMessageRead: (id: string, read: boolean) => void
+  deleteMessage: (id: string) => void
   // Firebase Cloud Database sync
   firebaseStatus: FirebaseSyncStatus
   isFirebaseConnected: boolean
@@ -88,7 +93,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           settings: { ...INITIAL_PORTFOLIO_DATA.settings, ...(parsed.settings || {}) },
           experience: parsed.experience && parsed.experience.length > 0
             ? parsed.experience
-            : INITIAL_PORTFOLIO_DATA.experience
+            : INITIAL_PORTFOLIO_DATA.experience,
+          messages: Array.isArray(parsed.messages)
+            ? parsed.messages
+            : (INITIAL_PORTFOLIO_DATA.messages || [])
         }
       }
     } catch (e) {
@@ -128,7 +136,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             settings: { ...INITIAL_PORTFOLIO_DATA.settings, ...(cloudData.settings || {}) },
             experience: cloudData.experience && cloudData.experience.length > 0
               ? cloudData.experience
-              : (prev.experience && prev.experience.length > 0 ? prev.experience : INITIAL_PORTFOLIO_DATA.experience)
+              : (prev.experience && prev.experience.length > 0 ? prev.experience : INITIAL_PORTFOLIO_DATA.experience),
+            messages: Array.isArray(cloudData.messages)
+              ? cloudData.messages
+              : (prev.messages || INITIAL_PORTFOLIO_DATA.messages || [])
           }))
           setFirebaseStatus('connected')
         }
@@ -447,6 +458,33 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }
 
+  const addInterviewRequest = (req: Omit<InterviewRequest, 'id' | 'date' | 'read'>) => {
+    const newMsg: InterviewRequest = {
+      ...req,
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      date: new Date().toISOString(),
+      read: false
+    }
+    setData((prev) => ({
+      ...prev,
+      messages: [newMsg, ...(prev.messages || [])]
+    }))
+  }
+
+  const markMessageRead = (id: string, read: boolean) => {
+    setData((prev) => ({
+      ...prev,
+      messages: (prev.messages || []).map((m) => (m.id === id ? { ...m, read } : m))
+    }))
+  }
+
+  const deleteMessage = (id: string) => {
+    setData((prev) => ({
+      ...prev,
+      messages: (prev.messages || []).filter((m) => m.id !== id)
+    }))
+  }
+
   return (
     <PortfolioContext.Provider
       value={{
@@ -484,6 +522,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsContactModalOpen,
         isCvModalOpen,
         setIsCvModalOpen,
+        // Interview requests & Messages
+        addInterviewRequest,
+        markMessageRead,
+        deleteMessage,
         // Firebase Cloud DB
         firebaseStatus,
         isFirebaseConnected: firebaseStatus === 'connected' || firebaseStatus === 'syncing',
