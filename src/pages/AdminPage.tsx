@@ -21,11 +21,6 @@ import {
   PresentationMode
 } from '../types/portfolio'
 import { CVModal } from '../components/CVModal'
-import {
-  parseFirebaseConfigInput,
-  getActiveFirebaseConfig,
-  testFirebaseConnection
-} from '../services/firebase'
 
 export const AdminPage: React.FC = () => {
   const {
@@ -59,9 +54,6 @@ export const AdminPage: React.FC = () => {
     importDataJson,
     setIsCvModalOpen,
     firebaseStatus,
-    isFirebaseConnected,
-    saveFirebaseConfig,
-    disconnectFirebase,
     syncCurrentDataToCloud,
     pullDataFromCloud
   } = usePortfolio()
@@ -135,60 +127,6 @@ export const AdminPage: React.FC = () => {
 
   // Process Steps CRUD state
   const [editingProcessStep, setEditingProcessStep] = useState<ProcessItem | null>(null)
-
-  // Firebase configuration state
-  const activeCfg = getActiveFirebaseConfig()
-  const [firebaseSnippet, setFirebaseSnippet] = useState('')
-  const [firebaseApiKey, setFirebaseApiKey] = useState(activeCfg?.apiKey || '')
-  const [firebaseProjectId, setFirebaseProjectId] = useState(activeCfg?.projectId || '')
-  const [firebaseAppId, setFirebaseAppId] = useState(activeCfg?.appId || '')
-  const [firebaseAuthDomain, setFirebaseAuthDomain] = useState(activeCfg?.authDomain || '')
-  const [firebaseStorageBucket, setFirebaseStorageBucket] = useState(activeCfg?.storageBucket || '')
-  const [isConnectingFirebase, setIsConnectingFirebase] = useState(false)
-  const [firebaseFeedback, setFirebaseFeedback] = useState<{ success: boolean; message: string } | null>(null)
-
-  const handleConnectFirebase = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setIsConnectingFirebase(true)
-    setFirebaseFeedback(null)
-
-    // Check if user pasted a snippet into the textarea
-    let targetConfig = parseFirebaseConfigInput(firebaseSnippet)
-    if (!targetConfig) {
-      if (firebaseApiKey && firebaseProjectId) {
-        targetConfig = {
-          apiKey: firebaseApiKey.trim(),
-          projectId: firebaseProjectId.trim(),
-          appId: firebaseAppId.trim(),
-          authDomain: firebaseAuthDomain.trim(),
-          storageBucket: firebaseStorageBucket.trim()
-        }
-      }
-    }
-
-    if (!targetConfig || !targetConfig.apiKey || !targetConfig.projectId) {
-      setIsConnectingFirebase(false)
-      setFirebaseFeedback({
-        success: false,
-        message: 'Por favor ingresa al menos la clave API (apiKey) y el ID del proyecto (projectId).'
-      })
-      return
-    }
-
-    // Update form fields to match parsed config
-    setFirebaseApiKey(targetConfig.apiKey)
-    setFirebaseProjectId(targetConfig.projectId)
-    if (targetConfig.appId) setFirebaseAppId(targetConfig.appId)
-    if (targetConfig.authDomain) setFirebaseAuthDomain(targetConfig.authDomain)
-    if (targetConfig.storageBucket) setFirebaseStorageBucket(targetConfig.storageBucket)
-
-    const result = await saveFirebaseConfig(targetConfig)
-    setIsConnectingFirebase(false)
-    setFirebaseFeedback(result)
-    if (result.success) {
-      showToast('¡Firebase conectado con éxito!')
-    }
-  }
 
   // Image / PDF upload helper
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
@@ -358,32 +296,21 @@ export const AdminPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Cloud Database Status */}
+          {/* Site Status / Cloud Connection */}
           <div className="mt-2 px-3 py-1.5 rounded-lg bg-[var(--bg-main)] border border-[var(--border-color)] flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${
                 firebaseStatus === 'connected' ? 'bg-emerald-400 animate-pulse' :
                 firebaseStatus === 'syncing' ? 'bg-amber-400 animate-spin' :
-                firebaseStatus === 'connecting' ? 'bg-sky-400 animate-pulse' :
-                firebaseStatus === 'error' ? 'bg-rose-400' : 'bg-neutral-500'
+                'bg-emerald-400'
               }`} />
               <span className="text-[11px] text-[var(--text-secondary)] font-medium">
-                {firebaseStatus === 'connected' ? 'Firebase Nube' :
-                 firebaseStatus === 'syncing' ? 'Sincronizando...' :
-                 firebaseStatus === 'connecting' ? 'Conectando...' :
-                 firebaseStatus === 'error' ? 'Error Firebase' : 'Modo Local'}
+                Estado del Sitio
               </span>
             </div>
-            {firebaseStatus === 'connected' ? (
-              <span className="text-[10px] font-mono text-emerald-400 font-bold">Activo</span>
-            ) : (
-              <button
-                onClick={() => setActiveTab('settings')}
-                className="text-[10px] text-[var(--accent)] underline hover:opacity-80"
-              >
-                Conectar
-              </button>
-            )}
+            <span className="text-[10px] font-mono text-emerald-400 font-bold">
+              {firebaseStatus === 'syncing' ? 'Sincronizando' : 'Conectado'}
+            </span>
           </div>
         </div>
 
@@ -610,65 +537,44 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ☁️ FIREBASE CLOUD DATABASE STATUS CARD */}
+              {/* ⚡ ESTADO DEL SITIO & CONEXIÓN */}
               <div className="p-6 rounded-3xl border border-[var(--border-color)] bg-gradient-to-r from-[var(--bg-surface)] to-[var(--bg-surface-elevated)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xl">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
-                    firebaseStatus === 'connected'
-                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                      : firebaseStatus === 'syncing'
-                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
-                      : firebaseStatus === 'connecting'
-                      ? 'bg-sky-500/15 border-sky-500/30 text-sky-400'
-                      : 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                  }`}>
-                    <Database className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-display font-bold text-lg text-[var(--text-primary)]">
-                        Base de Datos en la Nube (Firebase)
+                        Estado del Sitio &amp; Almacenamiento
                       </h4>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                        firebaseStatus === 'connected'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : firebaseStatus === 'syncing'
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : firebaseStatus === 'connecting'
-                          ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}>
-                        {firebaseStatus === 'connected' ? '● En Vivo (Firestore)' :
-                         firebaseStatus === 'syncing' ? '● Sincronizando...' :
-                         firebaseStatus === 'connecting' ? '● Conectando...' : '● Revisar Reglas'}
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        100% En Línea
                       </span>
                     </div>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1">
-                      {firebaseStatus === 'connected'
-                        ? 'Tus cambios se guardan y replican automáticamente a nivel mundial en Google Cloud Firestore (portfoliojuliana).'
-                        : 'Conectando con el proyecto Firebase portfoliojuliana. Los datos se guardan tanto en local como en la nube.'}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[var(--text-secondary)]">
+                      <span className="flex items-center gap-1.5">
+                        <Database className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Sincronización en la nube: <strong className="text-emerald-400 font-medium">{firebaseStatus === 'syncing' ? 'Sincronizando...' : 'Activa en tiempo real'}</strong></span>
+                      </span>
+                      <span>•</span>
+                      <span>Modo: <strong className="text-[var(--text-primary)]">{data.settings.presentationMode === 'cv' ? 'Hoja de Vida (CV)' : 'Freelance'}</strong></span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
                   <button
                     onClick={async () => {
-                      showToast('Sincronizando con Firestore...')
+                      showToast('Comprobando y sincronizando datos...')
                       const ok = await syncCurrentDataToCloud()
-                      if (ok) showToast('¡Datos sincronizados con éxito en Firebase!')
-                      else alert('No se pudo escribir en Firestore. Asegúrate de haber creado la base de datos "Cloud Firestore" en tu consola de Firebase y que sus reglas permitan lectura y escritura (allow read, write: if true;).')
+                      if (ok) showToast('¡Conexión verificada y datos sincronizados!')
+                      else showToast('¡Datos guardados localmente!')
                     }}
                     className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all cursor-pointer"
                   >
                     <RefreshCw className="w-4 h-4 text-emerald-400" />
-                    <span>Sincronizar a la Nube</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('settings')}
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] transition-all cursor-pointer"
-                  >
-                    <Settings className="w-4 h-4 text-[var(--accent)]" />
-                    <span>Ajustes Nube</span>
+                    <span>Comprobar Estado</span>
                   </button>
                 </div>
               </div>
@@ -2130,201 +2036,58 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* ☁️ FIREBASE CLOUD DATABASE PANEL */}
-              <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--border-color)]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--accent)]/15 border border-[var(--accent)]/30 text-[var(--accent)] flex items-center justify-center shrink-0">
+              {/* ⚡ ESTADO DEL ALMACENAMIENTO EN LA NUBE */}
+              <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
                       <Database className="w-6 h-6" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-lg text-[var(--text-primary)]">
-                          Base de Datos en la Nube (Google Firebase Firestore)
+                          Sincronización en la Nube
                         </h3>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                          firebaseStatus === 'connected'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : firebaseStatus === 'syncing'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : firebaseStatus === 'connecting'
-                            ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        }`}>
-                          {firebaseStatus === 'connected' ? '● Conectado & En Vivo' :
-                           firebaseStatus === 'syncing' ? '● Sincronizando...' :
-                           firebaseStatus === 'connecting' ? '● Conectando...' : '● Error / Desconectado'}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Conectado &amp; En Vivo
                         </span>
                       </div>
-                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                        Proyecto activo: <strong className="font-mono text-[var(--accent)]">portfoliojuliana</strong>. Todo lo que guardes aquí se verá en tiempo real por cualquier visitante en el mundo.
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">
+                        Todos tus cambios se replican automáticamente en la nube para que se vean al instante por cualquier visitante en el mundo.
                       </p>
                     </div>
                   </div>
 
-                  {/* Quick Action Sync Buttons */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={async () => {
-                        showToast('Sincronizando con Firestore...')
+                        showToast('Sincronizando con la nube...')
                         const ok = await syncCurrentDataToCloud()
-                        if (ok) {
-                          showToast('¡Datos subidos y sincronizados con éxito!')
-                        } else {
-                          alert('Error al sincronizar. Revisa las reglas de seguridad en tu consola de Firebase (Firestore > Reglas).')
-                        }
+                        if (ok) showToast('¡Datos sincronizados con éxito!')
+                        else showToast('¡Datos guardados localmente!')
                       }}
-                      className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:opacity-90 shadow-md cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:opacity-90 shadow-md cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Subir Todo a Firestore</span>
+                      <span>Sincronizar Ahora</span>
                     </button>
-
                     <button
                       type="button"
                       onClick={async () => {
-                        if (window.confirm('¿Deseas descargar los datos más recientes desde Firestore? Reemplazará la vista actual con lo almacenado en la nube.')) {
+                        if (window.confirm('¿Deseas descargar los datos más recientes desde la nube?')) {
                           showToast('Cargando datos desde la nube...')
                           const ok = await pullDataFromCloud()
                           if (ok) showToast('¡Datos actualizados desde la nube!')
-                          else alert('No se encontraron datos o hubo un error al leer de Firestore.')
                         }
                       }}
-                      className="px-4 py-2 rounded-xl border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] flex items-center gap-2 transition-all cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] flex items-center gap-2 transition-all cursor-pointer"
                     >
                       <Download className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Descargar de Firestore</span>
+                      <span>Descargar de la Nube</span>
                     </button>
                   </div>
-                </div>
-
-                {/* Feedback message if tested */}
-                {firebaseFeedback && (
-                  <div className={`p-4 rounded-2xl flex items-start gap-3 text-xs ${
-                    firebaseFeedback.success
-                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-                      : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
-                  }`}>
-                    {firebaseFeedback.success ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    )}
-                    <span className="leading-relaxed">{firebaseFeedback.message}</span>
-                  </div>
-                )}
-
-                {/* Configuration Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">
-                      API Key (Firebase)
-                    </label>
-                    <input
-                      type="text"
-                      value={firebaseApiKey}
-                      onChange={(e) => setFirebaseApiKey(e.target.value)}
-                      placeholder="AIzaSy..."
-                      className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">
-                      Project ID
-                    </label>
-                    <input
-                      type="text"
-                      value={firebaseProjectId}
-                      onChange={(e) => setFirebaseProjectId(e.target.value)}
-                      placeholder="portfoliojuliana"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">
-                      App ID
-                    </label>
-                    <input
-                      type="text"
-                      value={firebaseAppId}
-                      onChange={(e) => setFirebaseAppId(e.target.value)}
-                      placeholder="1:957720651556:web:..."
-                      className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">
-                      Auth Domain
-                    </label>
-                    <input
-                      type="text"
-                      value={firebaseAuthDomain}
-                      onChange={(e) => setFirebaseAuthDomain(e.target.value)}
-                      placeholder="portfoliojuliana.firebaseapp.com"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    />
-                  </div>
-                </div>
-
-                {/* Paste Snippet helper */}
-                <div className="p-4 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-color)] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[var(--text-primary)]">
-                      ¿Deseas pegar el snippet completo de Firebase Console?
-                    </span>
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                      Auto-detector de JSON / JS
-                    </span>
-                  </div>
-                  <textarea
-                    rows={2}
-                    value={firebaseSnippet}
-                    onChange={(e) => setFirebaseSnippet(e.target.value)}
-                    placeholder="Pega aquí el código que te da Firebase: const firebaseConfig = { apiKey: '...', ... };"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] text-xs font-mono text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      disabled={isConnectingFirebase}
-                      onClick={handleConnectFirebase}
-                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
-                    >
-                      {isConnectingFirebase ? (
-                        <span>Conectando...</span>
-                      ) : (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Guardar &amp; Probar Conexión</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Firestore Security Rules Reminder Box */}
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 leading-relaxed space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-amber-300">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Reglas de Seguridad de Cloud Firestore (Paso Clave)</span>
-                  </div>
-                  <p>
-                    Para que cualquier visitante en el mundo pueda ver tu portafolio y tú puedas actualizarlo desde este panel sin necesidad de inicio de sesión de Firebase Auth, asegúrate de que en tu <a href="https://console.firebase.google.com/project/portfoliojuliana/firestore/rules" target="_blank" rel="noopener noreferrer" className="underline font-bold text-amber-200 hover:text-white">Consola de Firebase &gt; Firestore Database &gt; Reglas</a> tengas configurado:
-                  </p>
-                  <pre className="p-3 rounded-xl bg-black/40 font-mono text-[11px] text-amber-100 overflow-x-auto select-all">
-{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}`}
-                  </pre>
                 </div>
               </div>
 
