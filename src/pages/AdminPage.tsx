@@ -44,6 +44,8 @@ export const AdminPage: React.FC = () => {
     updateExperience,
     deleteExperience,
     updateProcess,
+    addProcessStep,
+    deleteProcessStep,
     addTestimonial,
     updateTestimonial,
     deleteTestimonial,
@@ -131,6 +133,7 @@ export const AdminPage: React.FC = () => {
 
   // Process Steps CRUD state
   const [editingProcessStep, setEditingProcessStep] = useState<ProcessItem | null>(null)
+  const [isAddingProcessStep, setIsAddingProcessStep] = useState(false)
 
   // Image / PDF upload helper
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => {
@@ -275,6 +278,7 @@ export const AdminPage: React.FC = () => {
     setEditingTestimonial(null)
     setIsAddingTestimonial(false)
     setEditingProcessStep(null)
+    setIsAddingProcessStep(false)
   }
 
   return (
@@ -2010,20 +2014,38 @@ export const AdminPage: React.FC = () => {
           {/* ═══ PROCESS TAB (CRUD) ═══ */}
           {activeTab === 'process' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="font-display font-bold text-2xl sm:text-3xl">Metodología &amp; Fases de Trabajo (CRUD)</h2>
-                  <p className="text-xs text-[var(--text-muted)]">Personaliza las etapas de tu proceso de mercadeo.</p>
+                  <p className="text-xs text-[var(--text-muted)]">Personaliza las etapas de tu proceso de mercadeo. Puedes crear, editar o eliminar fases.</p>
                 </div>
+                {!editingProcessStep && (
+                  <button
+                    onClick={() => {
+                      const nextNum = (data.process?.length || 0) + 1
+                      setEditingProcessStep({
+                        id: `proc-${Date.now()}`,
+                        step: `0${nextNum}`,
+                        title: '',
+                        tagline: '',
+                        description: ''
+                      })
+                      setIsAddingProcessStep(true)
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shrink-0 hover:opacity-90"
+                  >
+                    <Plus className="w-4 h-4" /><span>Agregar Fase</span>
+                  </button>
+                )}
               </div>
 
               {editingProcessStep ? (
                 <div className="p-6 sm:p-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-4 mb-8">
                   <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                     <h4 className="font-display font-bold text-lg">
-                      Editar Fase {editingProcessStep.step}
+                      {isAddingProcessStep ? 'Nueva Fase de Metodología' : `Editar Fase ${editingProcessStep.step}`}
                     </h4>
-                    <button onClick={() => setEditingProcessStep(null)}
+                    <button onClick={() => { setEditingProcessStep(null); setIsAddingProcessStep(false) }}
                       className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                       Cancelar
                     </button>
@@ -2034,6 +2056,7 @@ export const AdminPage: React.FC = () => {
                       <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">Identificador de Fase</label>
                       <input type="text" value={editingProcessStep.step}
                         onChange={(e) => setEditingProcessStep({ ...editingProcessStep, step: e.target.value })}
+                        placeholder="Ej. 01, 02, A, B..."
                         className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-sm text-[var(--text-primary)]" />
                     </div>
 
@@ -2041,6 +2064,7 @@ export const AdminPage: React.FC = () => {
                       <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">Tagline</label>
                       <input type="text" value={editingProcessStep.tagline}
                         onChange={(e) => setEditingProcessStep({ ...editingProcessStep, tagline: e.target.value })}
+                        placeholder="Ej. Investigación & Data"
                         className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-sm text-[var(--text-primary)]" />
                     </div>
 
@@ -2048,6 +2072,7 @@ export const AdminPage: React.FC = () => {
                       <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">Título de la Fase</label>
                       <input type="text" value={editingProcessStep.title}
                         onChange={(e) => setEditingProcessStep({ ...editingProcessStep, title: e.target.value })}
+                        placeholder="Ej. Auditoría del Ecosistema Digital"
                         className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-sm text-[var(--text-primary)]" />
                     </div>
 
@@ -2055,52 +2080,80 @@ export const AdminPage: React.FC = () => {
                       <label className="block text-xs font-semibold mb-1 text-[var(--text-secondary)]">Descripción</label>
                       <textarea rows={3} value={editingProcessStep.description}
                         onChange={(e) => setEditingProcessStep({ ...editingProcessStep, description: e.target.value })}
+                        placeholder="Describe qué se hace en esta fase..."
                         className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border-color)] text-sm text-[var(--text-primary)]" />
                     </div>
                   </div>
 
                   <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-color)]">
-                    <button onClick={() => setEditingProcessStep(null)}
+                    <button onClick={() => { setEditingProcessStep(null); setIsAddingProcessStep(false) }}
                       className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-secondary)]">
                       Cancelar
                     </button>
                     <button
                       onClick={() => {
-                        const updated = data.process.map(p => p.id === editingProcessStep.id ? editingProcessStep : p)
-                        updateProcess(updated)
-                        showToast('¡Fase actualizada!')
+                        if (isAddingProcessStep) {
+                          addProcessStep(editingProcessStep)
+                          showToast('¡Nueva fase agregada!')
+                        } else {
+                          const updated = data.process.map(p => p.id === editingProcessStep.id ? editingProcessStep : p)
+                          updateProcess(updated)
+                          showToast('¡Fase actualizada!')
+                        }
                         setEditingProcessStep(null)
+                        setIsAddingProcessStep(false)
                       }}
                       className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2"
                     >
-                      <Save className="w-4 h-4" /><span>Guardar Fase</span>
+                      <Save className="w-4 h-4" /><span>{isAddingProcessStep ? 'Crear Fase' : 'Guardar Fase'}</span>
                     </button>
                   </div>
                 </div>
               ) : null}
 
-              <div className="space-y-3">
-                {data.process.map((step) => (
-                  <div key={step.id} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex items-start justify-between gap-4 group hover:border-[var(--accent)] transition-all">
-                    <div className="flex items-start gap-4">
-                      <span className="font-display font-extrabold text-3xl text-[var(--accent)] shrink-0">{step.step}</span>
-                      <div>
-                        <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] block mb-0.5">{step.tagline}</span>
-                        <h4 className="font-bold text-base text-[var(--text-primary)]">{step.title}</h4>
-                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-1">{step.description}</p>
+              {(!data.process || data.process.length === 0) ? (
+                <div className="p-12 rounded-3xl border border-dashed border-[var(--border-color)] bg-[var(--bg-surface)] text-center">
+                  <h4 className="font-bold text-base text-[var(--text-primary)] mb-1">No hay fases creadas</h4>
+                  <p className="text-xs text-[var(--text-secondary)]">Agrega las etapas de tu metodología de trabajo.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {data.process.map((step) => (
+                    <div key={step.id} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex items-start justify-between gap-4 group hover:border-[var(--accent)] transition-all">
+                      <div className="flex items-start gap-4">
+                        <span className="font-display font-extrabold text-3xl text-[var(--accent)] shrink-0">{step.step}</span>
+                        <div>
+                          <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] block mb-0.5">{step.tagline}</span>
+                          <h4 className="font-bold text-base text-[var(--text-primary)]">{step.title}</h4>
+                          <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-1">{step.description}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => { setEditingProcessStep(step); setIsAddingProcessStep(false) }}
+                          className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          title="Editar Fase"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`¿Eliminar la fase "${step.title}"?`)) {
+                              deleteProcessStep(step.id)
+                              showToast('Fase eliminada')
+                            }
+                          }}
+                          className="p-2 rounded-lg border border-[var(--border-color)] hover:border-rose-500 text-[var(--text-muted)] hover:text-rose-400 transition-colors"
+                          title="Eliminar Fase"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => setEditingProcessStep(step)}
-                      className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
-                      title="Editar Fase"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

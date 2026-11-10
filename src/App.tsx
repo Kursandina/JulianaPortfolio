@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { PortfolioProvider } from './context/PortfolioContext'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
@@ -15,6 +15,7 @@ import { Footer } from './components/Footer'
 import { ProjectModal } from './components/ProjectModal'
 import { ContactModal } from './components/ContactModal'
 import { AdminPage } from './pages/AdminPage'
+import { CVPage } from './pages/CVPage'
 
 function PortfolioPublic() {
   const navigate = useNavigate()
@@ -68,7 +69,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PortfolioPublic />} />
           <Route path="/admin" element={<AdminPage />} />
-          <Route path="/cv" element={<Navigate to="/admin" replace />} />
+          <Route path="/cv" element={<CVPage />} />
         </Routes>
       </PortfolioProvider>
     </BrowserRouter>

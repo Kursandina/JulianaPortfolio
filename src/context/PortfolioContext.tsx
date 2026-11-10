@@ -47,6 +47,8 @@ interface PortfolioContextType {
   updateExperience: (exp: WorkExperienceItem) => void
   deleteExperience: (id: string) => void
   updateProcess: (process: ProcessItem[]) => void
+  addProcessStep: (step: ProcessItem) => void
+  deleteProcessStep: (id: string) => void
   addTestimonial: (test: TestimonialItem) => void
   updateTestimonial: (test: TestimonialItem) => void
   deleteTestimonial: (id: string) => void
@@ -378,6 +380,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setData((prev) => ({ ...prev, process }))
   }
 
+  const addProcessStep = (step: ProcessItem) => {
+    setData((prev) => ({ ...prev, process: [...(prev.process || []), step] }))
+  }
+
+  const deleteProcessStep = (id: string) => {
+    setData((prev) => ({
+      ...prev,
+      process: (prev.process || []).filter((p) => p.id !== id)
+    }))
+  }
+
   const addTestimonial = (test: TestimonialItem) => {
     setData((prev) => ({ ...prev, testimonials: [...prev.testimonials, test] }))
   }
@@ -507,6 +520,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateExperience,
         deleteExperience,
         updateProcess,
+        addProcessStep,
+        deleteProcessStep,
         addTestimonial,
         updateTestimonial,
         deleteTestimonial,
