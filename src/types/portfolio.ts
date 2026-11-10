@@ -129,3 +129,15 @@ export interface PortfolioData {
   testimonials: TestimonialItem[]
   settings: SiteSettings
 }
+
+export interface FirebaseConfig {
+  apiKey: string
+  authDomain?: string
+  projectId: string
+  storageBucket?: string
+  messagingSenderId?: string
+  appId: string
+}
+
+export type FirebaseSyncStatus = 'unconfigured' | 'connecting' | 'connected' | 'syncing' | 'error'
+

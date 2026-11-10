@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import { PortfolioProvider } from './context/PortfolioContext'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
@@ -16,10 +17,23 @@ import { ContactModal } from './components/ContactModal'
 import { AdminPage } from './pages/AdminPage'
 
 function PortfolioPublic() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.altKey && (e.key === 'a' || e.key === 'A')) || (e.ctrlKey && e.shiftKey && (e.key === 'a' || e.key === 'A'))) {
+        e.preventDefault()
+        navigate('/admin')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [navigate])
+
   return (
     <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] relative selection:bg-[var(--accent)] selection:text-white transition-colors duration-500">
       {/* Dynamic Background Noise */}
-      <div className="fixed inset-0 bg-noise pointer-events-none z-30" />
+      <div className="fixed inset-0 bg-noise pointer-events-none z-30 no-print" />
 
       {/* Main Navigation */}
       <Navbar />
@@ -54,6 +68,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PortfolioPublic />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/cv" element={<Navigate to="/admin" replace />} />
         </Routes>
       </PortfolioProvider>
     </BrowserRouter>

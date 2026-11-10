@@ -1,6 +1,6 @@
 import React from 'react'
 import { usePortfolio } from '../context/PortfolioContext'
-import { ArrowUpRight, Menu, X, FileText, Briefcase } from 'lucide-react'
+import { ArrowUpRight, Menu, X, Briefcase } from 'lucide-react'
 
 export const Navbar: React.FC = () => {
   const { data, setIsContactModalOpen } = usePortfolio()
@@ -84,18 +84,6 @@ export const Navbar: React.FC = () => {
 
         {/* Right actions */}
         <div className="hidden lg:flex items-center gap-3">
-          {profile.resumeUrl && profile.resumeUrl !== '#' && (
-            <a
-              href={profile.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all"
-            >
-              <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>Ver CV (PDF)</span>
-            </a>
-          )}
-
           <button
             onClick={() => setIsContactModalOpen(true)}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-[var(--accent)] text-white hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-md shadow-black/20"
@@ -160,7 +148,7 @@ export const Navbar: React.FC = () => {
                 setMobileMenuOpen(false)
                 setIsContactModalOpen(true)
               }}
-              className="mt-3 w-full py-3 rounded-full text-center text-xs font-semibold uppercase tracking-wider bg-[var(--accent)] text-white flex items-center justify-center gap-2"
+              className="mt-2 w-full py-3 rounded-full text-center text-xs font-semibold uppercase tracking-wider bg-[var(--accent)] text-white flex items-center justify-center gap-2"
             >
               <span>{isCvMode ? 'Agendar Entrevista / Conversación' : 'Iniciar Conversación'}</span>
               <ArrowUpRight className="w-4 h-4" />

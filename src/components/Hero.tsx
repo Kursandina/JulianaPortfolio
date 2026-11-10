@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { usePortfolio } from '../context/PortfolioContext'
-import { ArrowUpRight, Download, Sparkles, TrendingUp, CheckCircle2, Globe, FileText } from 'lucide-react'
+import { ArrowUpRight, Sparkles, TrendingUp, CheckCircle2, Globe } from 'lucide-react'
 
 export const Hero: React.FC = () => {
   const { data, setIsContactModalOpen } = usePortfolio()
@@ -81,25 +81,13 @@ export const Hero: React.FC = () => {
                     <ArrowUpRight className="w-4 h-4" />
                   </a>
 
-                  {profile.resumeUrl && profile.resumeUrl !== '#' ? (
-                    <a
-                      href={profile.resumeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full text-xs font-bold uppercase tracking-wider border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all duration-300"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Descargar CV (PDF)</span>
-                    </a>
-                  ) : (
-                    <button
-                      onClick={() => setIsContactModalOpen(true)}
-                      className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full text-xs font-bold uppercase tracking-wider border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all duration-300"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>Solicitar CV Completo</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setIsContactModalOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full text-xs font-bold uppercase tracking-wider border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-all duration-300"
+                  >
+                    <span>Agendar Entrevista</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
 
                   <button
                     onClick={() => setIsContactModalOpen(true)}

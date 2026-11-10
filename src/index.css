@@ -144,3 +144,40 @@
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
 }
+
+/* ─── PRINT OPTIMIZATIONS FOR CURRICULUM VITAE PDF ─── */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm 12mm;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide screen-only navigation, modals overlay & buttons */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset document for pure A4 printing */
+  .cv-document {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
